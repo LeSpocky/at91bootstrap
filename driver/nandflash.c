@@ -905,6 +905,11 @@ static int nand_info_init(struct nand_info *nand, struct nand_chip *chip)
 		nand->address = nand_address;
 	}
 
+	dbg_loud("NAND: badblockpos: %u, eccbytes: %u, eccpos[0]: %u\n",
+		 nand->ecclayout->badblockpos,
+		 nand->ecclayout->eccbytes,
+		 nand->ecclayout->eccpos[0]);
+
 	return 0;
 }
 
@@ -1240,6 +1245,8 @@ static int nand_check_badblock(struct nand_info *nand,
 	 */
 	for (page = 0; page < 2; page++) {
 		nand_read_sector(nand, row_address + page, buffer, ZONE_INFO);
+		dbg_printf("NAND: block #%x page #%x oob:\n", block, page);
+		dbg_hexdump(buffer, nand->oobsize, DUMP_WIDTH_BIT_8);
 		if (*(buffer + nand->ecclayout->badblockpos)
 			!= 0xff)
 			return -1;
