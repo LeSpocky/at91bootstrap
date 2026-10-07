@@ -1169,6 +1169,9 @@ static int nand_read_sector(struct nand_info *nand,
 		return -1;
 	}
 
+	dbg_printf("NAND: read_sector row %x column %x bytes %u\n",
+		   row_address, column_address, readbytes);
+
 	nand_cs_enable();
 
 	nand->command(CMD_READ_1);
@@ -1227,6 +1230,18 @@ static int nand_read_sector(struct nand_info *nand,
 
 	nand_cs_disable();
 
+	if (readbytes >= nand->pagesize) {
+#if 0
+		dbg_printf("NAND: page:\n");
+		/* first 16 byte only instead of nand->pagesize */
+		dbg_hexdump(buffer, 0x10, DUMP_WIDTH_BIT_8);
+		dbg_printf("NAND: oob:\n");
+		dbg_hexdump(oob, nand->oobsize, DUMP_WIDTH_BIT_8);
+#endif
+	} else {
+		dbg_hexdump(buffer, readbytes, DUMP_WIDTH_BIT_8);
+	}
+
 	return ret;
 }
 #endif /* #ifdef CONFIG_NANDFLASH_SMALL_BLOCKS */
@@ -1239,14 +1254,14 @@ static int nand_check_badblock(struct nand_info *nand,
 	unsigned int page;
 	unsigned int row_address = block * nand->pages_block;
 
+	dbg_loud("NAND: check badblock #%x\n", block);
+
 	/*
 	 * Read the first page and second page oob zone
 	 * to detect if block is bad
 	 */
 	for (page = 0; page < 2; page++) {
 		nand_read_sector(nand, row_address + page, buffer, ZONE_INFO);
-		dbg_printf("NAND: block #%x page #%x oob:\n", block, page);
-		dbg_hexdump(buffer, nand->oobsize, DUMP_WIDTH_BIT_8);
 		if (*(buffer + nand->ecclayout->badblockpos)
 			!= 0xff)
 			return -1;
@@ -1274,6 +1289,8 @@ static int nand_read_page(struct nand_info *nand,
 				unsigned char *buffer)
 {
 	unsigned int row_address = block * nand->pages_block + page;
+
+	dbg_loud("NAND: read page %u in block %u\n", page, block);
 
 #ifndef CONFIG_ENABLE_SW_ECC
 	return nand_read_sector(nand, row_address, buffer, ZONE_DATA);
