@@ -177,6 +177,7 @@ void nandflash_smc_conf(unsigned int mode, unsigned int cs)
 	if (pmc_mck_check_h32mxdiv())
 		mck = div(mck, 2);
 #endif
+	dbg_loud("NAND: MCK: %u\n", mck);
 
 	mck_ns = div(1000000000u, mck);
 	mck_ps = mck_ns * 1000;
@@ -279,6 +280,15 @@ void nandflash_smc_conf(unsigned int mode, unsigned int cs)
 		       DIV_ROUND_UP(nand_onfi_timings[mode].tWB, mck_ps))) |
 		       AT91C_SMC_TIMINGS_NFSEL,
 		       ATMEL_BASE_SMC + SMC_TIMINGS(cs));
+
+	dbg_loud("NAND: SMC_SETUP%u: %x, SMC_PULSE%u: %x\n",
+		 cs, readl(ATMEL_BASE_SMC + SMC_SETUP(cs)),
+		 cs, readl(ATMEL_BASE_SMC + SMC_PULSE(cs)));
+	dbg_loud("NAND: SMC_CYCLE%u: %x, SMC_MODE%u: %x\n",
+		 cs, readl(ATMEL_BASE_SMC + SMC_CYCLE(cs)),
+		 cs, readl(ATMEL_BASE_SMC + SMC_MODE(cs)));
+	dbg_loud("NAND: SMC_TIMINGS%u: %x\n",
+		 cs, readl(ATMEL_BASE_SMC + SMC_TIMINGS(cs)));
 #else
 	writel(AT91C_SMC_NWESETUP_(nwe_setup), AT91C_BASE_SMC + SMC_SETUP(cs));
 	writel(AT91C_SMC_NWEPULSE_(nwe_pulse) |
@@ -294,6 +304,13 @@ void nandflash_smc_conf(unsigned int mode, unsigned int cs)
 		       AT91C_SMC_TDFEN |
 		       AT91_SMC_TDF_(tdf),
 		       AT91C_BASE_SMC + SMC_MODE(cs));
+
+	dbg_loud("NAND: SMC_SETUP%u: %x, SMC_PULSE%u: %x\n",
+		 cs, readl(AT91C_BASE_SMC + SMC_SETUP(cs)),
+		 cs, readl(AT91C_BASE_SMC + SMC_PULSE(cs)));
+	dbg_loud("NAND: SMC_CYCLE%u: %x, SMC_MODE%u: %x\n",
+		 cs, readl(AT91C_BASE_SMC + SMC_CYCLE(cs)),
+		 cs, readl(AT91C_BASE_SMC + SMC_MODE(cs)));
 #endif
 }
 
