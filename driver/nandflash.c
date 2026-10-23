@@ -723,22 +723,36 @@ static int nandflash_detect_onfi(struct nand_chip *chip)
 		return -1;
 	}
 
+#if (BOOTSTRAP_DEBUG_LEVEL >= DEBUG_LOUD)
+	dbg_printf("ONFI Parameter Page:\n");
+	dbg_hexdump(p, ONFI_PARAMS_SIZE, DUMP_WIDTH_BIT_8);
+#endif
+	dbg_loud("crc: %x\n", crc);
+
 	revision = *(unsigned short *)(p + PARAMS_OFFSET_REVISION);
 	features = *(unsigned short *)(p + PARAMS_OFFSET_FEATURES);
 	chip->opt_cmd = *(unsigned short *)(p + PARAMS_OFFSET_OPT_CMD);
 	ext_page_len = *(unsigned short *)(p +
 					   PARAMS_OFFSET_EXT_PARAM_PAGE_LEN);
+	dbg_loud("revision: %x, features: %x, opt_cmd: %x, ext_page_len: %x\n",
+		 revision, features, chip->opt_cmd, ext_page_len);
+
 	num_param_page = *(unsigned char *)(p + PARAMS_OFFSET_PARAMETER_PAGE);
 
 	chip->numblocks = *(unsigned short *)(p + PARAMS_OFFSET_NBBLOCKS);
 	chip->pagesize	= *(unsigned short *)(p + PARAMS_OFFSET_PAGESIZE);
 	chip->blocksize = *(unsigned int  *)(p + PARAMS_OFFSET_BLOCKSIZE)
 							* chip->pagesize;
+	dbg_loud("num_param_page: %x, numblocks: %x, pagesize: %x, blocksize: %x\n",
+		 num_param_page, chip->numblocks, chip->pagesize, chip->blocksize);
+
 	chip->oobsize	= *(unsigned short *)(p + PARAMS_OFFSET_OOBSIZE);
 	chip->buswidth	= features & PARAMS_FEATURE_BUSWIDTH;
 	chip->eccbits	= *(unsigned char *)(p + PARAMS_OFFSET_ECC_BITS);
 	chip->eccwordsize = 512;
 	chip->timingmode  = *(unsigned short *)(p + PARAMS_OFFSET_TIMING_MODE);
+	dbg_loud("oobsize: %x, buswidth: %x, eccbits: %x, timingmode: %x\n",
+		 chip->oobsize, chip->buswidth, chip->eccbits, chip->timingmode);
 
 	if ((chip->eccbits == 0xff) &&
 	    (revision & PARAMS_REVISION_2_1) &&
